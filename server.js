@@ -1,6 +1,7 @@
 import express from "express";
 import fetch from "node-fetch";
 import dotenv from "dotenv";
+import * as cheerio from "cheerio";
 
 dotenv.config();
 
@@ -30,8 +31,18 @@ app.get("/proxy", async (req, res) => {
     });
 
     const text = await response.text();
+    const $ = cheerio.load(text);
+
+    const officialUrl = `${process.env.POLICE_URL}?cnic=${cnic}`;
+    $("body").prepend(
+      `<div style="background:#fffae6;padding:10px;text-align:center;font-weight:bold;">
+         🔗 Official Verification Link: 
+         <a href="${officialUrl}" target="_blank">${officialUrl}</a>
+       </div>`
+    );
+
     res.set("Content-Type", "text/html; charset=utf-8");
-    res.send(text);
+    res.send($.html());
   } catch (err) {
     console.error("Proxy error:", err);
     res.status(500).json({ error: "Proxy failed" });
